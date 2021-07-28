@@ -8,9 +8,20 @@ import serial
 import serial.tools.list_ports
 
 
+SECONDS_BETWEEN_MEASUREMENTS = 10 * 60
+
+print(f"{SECONDS_BETWEEN_MEASUREMENTS=}")
+if not isinstance(SECONDS_BETWEEN_MEASUREMENTS, int):
+    raise Exception("SECONDS_BETWEEN_MEASUREMENTS needs to be an integer")
+if SECONDS_BETWEEN_MEASUREMENTS > 3600:
+    raise Exception("SECONDS_BETWEEN_MEASUREMENTS is too large. The largest acceptable value is 3600")
+if SECONDS_BETWEEN_MEASUREMENTS < 1:
+    raise Exception("SECONDS_BETWEEN_MEASUREMENTS is too large. The largest acceptable value is 3600")
+
 csv_filename = f"balance_readings_{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.csv"
 csv_path = Path(csv_filename)
 # csv_path = Path.home() / "Desktop" / csv_filename
+
 
 def main():
     # Open the COM port connection to the balance
@@ -41,7 +52,7 @@ def main():
         time.sleep(1)
 
         # Start the new stream of mass data over serial
-        tx = "1P\r\n"
+        tx = f"{SECONDS_BETWEEN_MEASUREMENTS}P\r\n"
         ser.write(tx.encode('ascii'))
 
         print(f"Recording balance measurements to {csv_path}\n")

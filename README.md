@@ -3,6 +3,8 @@ This repo contains a python script to automate recording measurements from a Fis
 The specific balance that this repo has been written and tested with is the Fisherbrand 15??????
 
 ## Running the script
+Use a text editor to adjust the SECONDS_BETWEEN_MEASUREMENTS parameter in the balance_recorder.py. Then run the
+following command...
 ```shell
 python balance_recorder.py
 ```
