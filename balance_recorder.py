@@ -38,7 +38,7 @@ def main():
         csv_filename = f"{balance['name']} {datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.csv"
         csv_path = csv_output_folder / csv_filename
         with open(str(csv_path), "w", newline='', buffering=1) as csv_file:
-            fields = ["elapsed secs", "timestamp", "unix time", "gross", "net", "tare", "error", "unstable"]
+            fields = ["elapsed secs", "timestamp", "unix time", "gross", "net", "delta", "tare", "error", "unstable"]
             writer = csv.DictWriter(csv_file, fieldnames=fields)
             writer.writeheader()
 
@@ -46,6 +46,7 @@ def main():
 
             print(f"\nRecording balance measurements to {csv_path}\n")
             start_unix_time = None
+            previous_net = None
             while True:
                 rx = receive_data(ser)
 
@@ -63,6 +64,11 @@ def main():
                         unstable = "?" in line
                     elif line.startswith("Net:"):
                         net = get_number_from_string(line)
+                        if previous_net is None:
+                            delta = "-"
+                        else:
+                            delta = net - previous_net
+                        previous_net = net
                     elif line.startswith("Tare:"):
                         tare = get_number_from_string(line)
                     elif len(line) > 6:
@@ -86,7 +92,7 @@ def main():
                 elapsed_time_secs = int(remainder_seconds % 60)
 
                 print(f"{balance['name']}:    {elapsed_time_hours}h {elapsed_time_mins:02d}m {elapsed_time_secs:02d}s"
-                      + f"    {timestamp}    {net}g")
+                      + f"    {timestamp}    {net}g    {delta}g")
 
                 # Write data to csv file
                 data_point = {"elapsed secs": elapsed_secs,
@@ -95,6 +101,7 @@ def main():
                               "gross": gross,
                               "net": net,
                               "tare": tare,
+                              "delta": delta,
                               "error": error,
                               "unstable": unstable}
                 writer.writerow(data_point)
