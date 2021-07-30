@@ -1,6 +1,8 @@
 # Pycharm project settings
 .idea/
 
+# Output files
+.csv
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
