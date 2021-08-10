@@ -1,7 +1,7 @@
 [Desktop Entry]
 Name=Balance Recorder
-Exec=/home/spotta/Documents/balance_recorder/balance_recorder.py
-Icon=/home/spotta/Documents/balance_recorder/scale_icon_blue.png
+Exec=/home/spotta/Documents/fisherbrand_balance/balance_recorder.py
+Icon=/home/spotta/Documents/fisherbrand_balance/shortcuts/scale_icon_blue.png
 Terminal=true
 Type=Application
 

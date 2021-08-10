@@ -24,7 +24,7 @@ csv_output_folder = Path("./")
 # csv_output_folder = Path.home() / "Desktop" / csv_filename
 
 BALANCE_SERIAL_NUMS = {
-    "C???": "Sylvester Scalelone",
+    "C109240743": "Sylvester Scalelone",
     "C052778878": "Dweight Johnson",
     "C105085062": "Mass Damon"
 }
