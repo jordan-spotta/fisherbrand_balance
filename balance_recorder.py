@@ -118,18 +118,15 @@ def select_balance():
             balance_serial_num = "Error"
             ser = serial.Serial(port.device, baudrate=9600, timeout=0.1)
             if not ser.isOpen():
-                try:
-                    ser.open()
-                    send_data(ser, "0P")   # Stop any old streams of data
-                    time.sleep(0.2)
-                    send_data(ser, "PSN")   # Request balance to 'Print Serial Number'
-                    rx = receive_data(ser)
-                    for line in rx:
-                        if line.startswith("SNR: "):
-                            balance_serial_num = line.replace("SNR: ", "")
-                    ser.close()
-                except SerialException:
-                    continue
+                ser.open()
+                send_data(ser, "0P")   # Stop any old streams of data
+                time.sleep(0.2)
+                send_data(ser, "PSN")   # Request balance to 'Print Serial Number'
+                rx = receive_data(ser)
+                for line in rx:
+                    if line.startswith("SNR: "):
+                        balance_serial_num = line.replace("SNR: ", "")
+                ser.close()
                 balance = {"serial_num": balance_serial_num,
                            "name": BALANCE_SERIAL_NUMS.get(balance_serial_num, "?????"),
                            "comport": port.device}
