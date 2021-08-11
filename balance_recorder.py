@@ -124,7 +124,7 @@ def select_balance():
         if port.vid == 1659 and port.pid == 8963:
             balance_serial_num = "Error"
             if is_usb_device_unlocked(port.device):
-                with serial.Serial(port.device, baudrate=9600, timeout=0.1) as ser
+                with serial.Serial(port.device, baudrate=9600, timeout=0.1) as ser:
                     send_data(ser, "0P")  # Stop any old streams of data
                     time.sleep(0.2)
                     send_data(ser, "PSN")   # Request balance to 'Print Serial Number'
