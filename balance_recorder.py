@@ -118,7 +118,6 @@ def select_balance():
     print("Balances available:")
     ports = serial.tools.list_ports.comports()
     balances = []
-    print(f"first check... {ser.isOpen()=}")
     for port in ports:
         # The USB<->RS232 cable has a specific vendor id (vid) and product id (pid)
         if port.vid == 1659 and port.pid == 8963:
