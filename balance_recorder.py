@@ -119,6 +119,7 @@ def select_balance():
         if port.vid == 1659 and port.pid == 8963:
             balance_serial_num = "Error"
             with serial.Serial(port.device, baudrate=9600, timeout=0.1) as ser:
+                print(f"{ser.isOpen()=}")
                 input("Just opened port, hit enter to continue")
                 send_data(ser, "PSN")   # Request balance to 'Print Serial Number'
                 rx = receive_data(ser)
