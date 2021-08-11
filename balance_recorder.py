@@ -234,6 +234,7 @@ def unlock_usb_device(device):
 
 
 def exit_handler():
+    print(f"Unlocking {usb_device}")
     if usb_device is not None:
         unlock_usb_device(usb_device)
 
