@@ -68,3 +68,4 @@ ENV/
 env.bak/
 venv.bak/
 
+usb_device.lock

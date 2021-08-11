@@ -8,6 +8,7 @@ from pathlib import Path
 import serial
 import serial.tools.list_ports
 from serial import SerialException
+import atexit
 
 
 SECONDS_BETWEEN_MEASUREMENTS = 6
@@ -29,11 +30,14 @@ BALANCE_SERIAL_NUMS = {
     "C105085062": "Mass Damon"
 }
 
+usb_device_lock = Path("usb_device.lock")
+usb_device = None
+
 
 def main():
     balance = select_balance()
+    lock_usb_device(balance["comport"])
     with serial.Serial(balance["comport"], baudrate=9600, timeout=0.1) as ser:
-
         # Create csv output file
         csv_filename = f"{balance['name']} {datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.csv"
         csv_path = csv_output_folder / csv_filename
@@ -114,29 +118,27 @@ def select_balance():
     print("Balances available:")
     ports = serial.tools.list_ports.comports()
     balances = []
-    ser = serial.Serial(None, baudrate=9600, timeout=0.1)
     print(f"first check... {ser.isOpen()=}")
     for port in ports:
         # The USB<->RS232 cable has a specific vendor id (vid) and product id (pid)
         if port.vid == 1659 and port.pid == 8963:
             balance_serial_num = "Error"
-            ser.port = port.device
-            print(f"{ser.isOpen()=}")
-            print("opening port...")
-            ser.open()
-            print(f"{ser.isOpen()=}")
-            input("Hit enter to continue")
-            send_data(ser, "PSN")   # Request balance to 'Print Serial Number'
-            rx = receive_data(ser)
-            for line in rx:
-                if line.startswith("SNR: "):
-                    balance_serial_num = line.replace("SNR: ", "")
-            ser.close()
-            balance = {"serial_num": balance_serial_num,
-                       "name": BALANCE_SERIAL_NUMS.get(balance_serial_num, "?????"),
-                       "comport": port.device}
-            balances.append(balance)
-            print(f'{len(balances)}. {balance["name"].ljust(6)} ({balance["serial_num"]} {balance["comport"]})')
+            if is_usb_device_unlocked(port.device):
+                with serial.Serial(port.device, baudrate=9600, timeout=0.1) as ser
+                    send_data(ser, "0P")  # Stop any old streams of data
+                    time.sleep(0.2)
+                    send_data(ser, "PSN")   # Request balance to 'Print Serial Number'
+                    rx = receive_data(ser)
+                for line in rx:
+                    if line.startswith("SNR: "):
+                        balance_serial_num = line.replace("SNR: ", "")
+                balance = {"serial_num": balance_serial_num,
+                           "name": BALANCE_SERIAL_NUMS.get(balance_serial_num, "?????"),
+                           "comport": port.device}
+                balances.append(balance)
+                print(f'{len(balances)}. {balance["name"].ljust(6)} ({balance["serial_num"]} {balance["comport"]})')
+            else:
+                print("[Balance already in use]")
     if len(balances) == 0:
         print("  - No balances connected - ")
         input("\nPress enter to exit")
@@ -196,6 +198,44 @@ def get_numbers_from_string(string):
     numbers_str = re.findall(r"[-+]?\d*\.\d+|\d+", string)
     numbers = [float(x) for x in numbers_str]
     return numbers
+
+
+def is_usb_device_locked(device):
+    if not usb_device_lock.exists():
+        return False
+    with open(str(usb_device_lock), "r") as usb_device_lock_file:
+        data = usb_device_lock_file.read()
+    if device in data:
+        return True
+    else:
+        return False
+
+
+def lock_usb_device(device):
+    usb_device = device
+    if not is_usb_device_locked(device):
+        with open(str(usb_device_lock), "a") as usb_device_lock_file:
+            usb_device_lock_file.writelines(device + "\n")
+            usb_device_lock_file.flush()
+
+
+def unlock_usb_device(device):
+    usb_device = None
+    if is_usb_device_locked(device):
+        with open(str(usb_device_lock), "r") as usb_device_lock_file:
+            data = usb_device_lock_file.read()
+        data = data.replace(device + "\n", '')
+        with open(str(usb_device_lock), "w") as usb_device_lock_file:
+            usb_device_lock_file.writelines(data)
+            usb_device_lock_file.flush()
+
+
+def exit_handler():
+    if usb_device is not None:
+        unlock_usb_device(usb_device)
+
+
+atexit.register(exit_handler)
 
 
 if __name__ == '__main__':
