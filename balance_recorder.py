@@ -10,7 +10,7 @@ import serial.tools.list_ports
 from serial import SerialException
 
 
-SECONDS_BETWEEN_MEASUREMENTS = 6  # 10 * 60
+SECONDS_BETWEEN_MEASUREMENTS = 6
 
 print(f"Seconds between measurements: {SECONDS_BETWEEN_MEASUREMENTS}")
 if not isinstance(SECONDS_BETWEEN_MEASUREMENTS, int):
@@ -20,8 +20,8 @@ if SECONDS_BETWEEN_MEASUREMENTS > 3600:
 if SECONDS_BETWEEN_MEASUREMENTS < 1:
     raise Exception("SECONDS_BETWEEN_MEASUREMENTS is too large. The largest acceptable value is 3600")
 
-csv_output_folder = Path("./")
-# csv_output_folder = Path.home() / "Desktop" / csv_filename
+# csv_output_folder = Path("./")
+csv_output_folder = Path.home() / "Desktop"
 
 BALANCE_SERIAL_NUMS = {
     "C109240743": "Sylvester Scalelone",
@@ -117,7 +117,8 @@ def select_balance():
         if port.vid == 1659 and port.pid == 8963:
             balance_serial_num = "Error"
             try:
-                with serial.Serial(port.device, baudrate=9600, timeout=0.1) as ser:
+                ser = serial.Serial(port.device, baudrate=9600, timeout=0.1)
+                if not ser.isOpen():
                     send_data(ser, "0P")   # Stop any old streams of data
                     time.sleep(0.2)
                     send_data(ser, "PSN")   # Request balance to 'Print Serial Number'
@@ -125,6 +126,7 @@ def select_balance():
                     for line in rx:
                         if line.startswith("SNR: "):
                             balance_serial_num = line.replace("SNR: ", "")
+                    ser.close()
             except SerialException:
                 continue
 
