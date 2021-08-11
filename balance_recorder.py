@@ -114,18 +114,24 @@ def select_balance():
     print("Balances available:")
     ports = serial.tools.list_ports.comports()
     balances = []
+    ser = serial.Serial(None, baudrate=9600, timeout=0.1)
+    print(f"first check... {ser.isOpen()=}")
     for port in ports:
         # The USB<->RS232 cable has a specific vendor id (vid) and product id (pid)
         if port.vid == 1659 and port.pid == 8963:
             balance_serial_num = "Error"
-            with serial.Serial(port.device, baudrate=9600, timeout=0.1) as ser:
-                print(f"{ser.isOpen()=}")
-                input("Just opened port, hit enter to continue")
-                send_data(ser, "PSN")   # Request balance to 'Print Serial Number'
-                rx = receive_data(ser)
-                for line in rx:
-                    if line.startswith("SNR: "):
-                        balance_serial_num = line.replace("SNR: ", "")
+            ser.port = port.device
+            print(f"{ser.isOpen()=}")
+            print("opening port...")
+            ser.open()
+            print(f"{ser.isOpen()=}")
+            input("Hit enter to continue")
+            send_data(ser, "PSN")   # Request balance to 'Print Serial Number'
+            rx = receive_data(ser)
+            for line in rx:
+                if line.startswith("SNR: "):
+                    balance_serial_num = line.replace("SNR: ", "")
+            ser.close()
             balance = {"serial_num": balance_serial_num,
                        "name": BALANCE_SERIAL_NUMS.get(balance_serial_num, "?????"),
                        "comport": port.device}
