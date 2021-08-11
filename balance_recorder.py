@@ -59,7 +59,9 @@ def main():
                 net = None
                 tare = None
                 for line in rx:
-                    if line.startswith("Gross:"):
+                    if line.startswith("SNR: "):
+                        continue
+                    elif line.startswith("Gross:"):
                         gross = get_number_from_string(line)
                         unstable = "?" in line
                     elif line.startswith("Net:"):
