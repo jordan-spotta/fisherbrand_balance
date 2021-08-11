@@ -215,6 +215,7 @@ def is_usb_device_unlocked(device):
 
 
 def lock_usb_device(device):
+    global usb_device
     usb_device = device
     if not is_usb_device_locked(device):
         with open(str(usb_device_lock), "a") as usb_device_lock_file:
@@ -223,6 +224,7 @@ def lock_usb_device(device):
 
 
 def unlock_usb_device(device):
+    global usb_device
     usb_device = None
     if is_usb_device_locked(device):
         with open(str(usb_device_lock), "r") as usb_device_lock_file:
