@@ -21,8 +21,7 @@ if SECONDS_BETWEEN_MEASUREMENTS > 3600:
 if SECONDS_BETWEEN_MEASUREMENTS < 1:
     raise Exception("SECONDS_BETWEEN_MEASUREMENTS is too large. The largest acceptable value is 3600")
 
-# csv_output_folder = Path("./")
-csv_output_folder = Path.home() / "Desktop"
+csv_output_folder = Path(__file__).parent / "output_logs"
 
 BALANCE_SERIAL_NUMS = {
     "C109240743": "Sylvester Scalelone",
@@ -30,7 +29,7 @@ BALANCE_SERIAL_NUMS = {
     "C105085062": "Mass Damon"
 }
 
-usb_device_lock = Path("usb_device.lock")
+usb_device_lock = Path(__file__).parent / "usb_device.lock"
 usb_device = None
 
 
