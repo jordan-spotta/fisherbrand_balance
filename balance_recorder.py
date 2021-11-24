@@ -41,7 +41,7 @@ def main():
         csv_filename = f"{balance['name']} {datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.csv"
         csv_path = csv_output_folder / csv_filename
         with open(str(csv_path), "w", newline='', buffering=1) as csv_file:
-            fields = ["elapsed secs", "timestamp", "unix time", "gross", "net", "delta", "tare", "error", "unstable"]
+            fields = ["elapsed secs", "timestamp", "unix time", "gross", "net", "tare", "error", "unstable"]
             writer = csv.DictWriter(csv_file, fieldnames=fields)
             writer.writeheader()
 
@@ -49,15 +49,11 @@ def main():
 
             print(f"\nRecording balance measurements to {csv_path}\n")
             start_unix_time = None
-            previous_net = None
             while True:
                 rx = receive_data(ser)
 
                 # Interpret received data
                 unstable = False
-                elapsed_secs = None
-                timestamp = None
-                unix_time = None
                 gross = None
                 net = None
                 tare = None
@@ -69,44 +65,35 @@ def main():
                         unstable = "?" in line
                     elif line.startswith("Net:"):
                         net = get_number_from_string(line)
-                        if previous_net is None:
-                            delta = "-"
-                        else:
-                            delta = net - previous_net
-                        previous_net = net
                     elif line.startswith("Tare:"):
                         tare = get_number_from_string(line)
-                    elif len(line) > 6:
-                        if line[2] == "/" and line[5] == "/":
-                            timestamp = line
-                            nums = get_numbers_from_string(line)
-                            unix_time = datetime(int(nums[2]), int(nums[0]), int(nums[1]),
-                                                 int(nums[3]), int(nums[4]), int(nums[5])).timestamp()
-                            if start_unix_time is None:
-                                start_unix_time = unix_time
-                            elapsed_secs = unix_time - start_unix_time
 
-                if timestamp is None or gross is None or net is None or tare is None:
+                if gross is None or net is None or tare is None:
                     error = True
                 else:
                     error = False
 
+                data_datetime = datetime.now()
+                data_unix_time = data_datetime.timestamp()
+                data_date_time = str(data_datetime.astimezone())
+                if start_unix_time is None:
+                    start_unix_time = data_unix_time
+                elapsed_secs = round(data_unix_time - start_unix_time, 2)
                 elapsed_time_hours = math.floor(elapsed_secs / 3600)
                 remainder_seconds = elapsed_secs % 3600
                 elapsed_time_mins = math.floor(remainder_seconds / 60)
                 elapsed_time_secs = int(remainder_seconds % 60)
 
                 print(f"{balance['name']}:    {elapsed_time_hours}h {elapsed_time_mins:02d}m {elapsed_time_secs:02d}s"
-                      + f"    {timestamp}    {net}g    {delta}g")
+                      + f"    {data_date_time}    {net}g")
 
                 # Write data to csv file
                 data_point = {"elapsed secs": elapsed_secs,
-                              "timestamp": timestamp,
-                              "unix time": unix_time,
+                              "timestamp": data_date_time,
+                              "unix time": data_unix_time,
                               "gross": gross,
                               "net": net,
                               "tare": tare,
-                              "delta": delta,
                               "error": error,
                               "unstable": unstable}
                 writer.writerow(data_point)
